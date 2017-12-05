@@ -1,5 +1,6 @@
 package com.StanleyDavid.flashchatnewfirebase;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
@@ -12,6 +13,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -62,7 +64,7 @@ public class RegisterActivity extends AppCompatActivity {
         mConfirmPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == R.id.register_form_finished || id == EditorInfo.IME_NULL) {
+                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
                     attemptRegistration();
                     return true;
                 }
@@ -95,12 +97,16 @@ public class RegisterActivity extends AppCompatActivity {
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
-        if (TextUtils.isEmpty(password) || !isPasswordValid(password)) {
+        if (TextUtils.isEmpty(password)) {
+            mPasswordView.setError(getString(R.string.error_field_required));
+            focusView = mPasswordView;
+            cancel = true;
+        }
+        if (!isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
-
         // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
@@ -125,9 +131,9 @@ public class RegisterActivity extends AppCompatActivity {
 
     private boolean isEmailValid(String email) {
         // You can add more checking logic here.
-        if(!email.isEmpty()){
-            if(email.matches("[a-zA-Z0-9]*@.*\\.com")){
-               return true;
+        if (!"".equals(email)) {
+            if (email.matches("[a-zA-Z0-9]*@.*\\.com")) {
+                return true;
             }
         }
         return false;
@@ -148,17 +154,22 @@ public class RegisterActivity extends AppCompatActivity {
 
     // TODO: Create a Firebase user
     private void createFirebaseUser() {
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        final String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 Log.d("Firebase", "createFirebaseUser onComplete: " + task.getResult());
-
                 if (!task.isSuccessful()) {
-                    Log.d("Firebase", "createFirebaseUser Failed!");
+                    Log.d("Firebase", "createFirebaseUser Failed: " + task.getResult().toString());
                 } else {
-                    Log.d("Firebase", "createFirebaseUser Successful!");
+                    Log.d("Firebase", "createFirebaseUser Successful: " + task.getResult().toString());
+                    Toast.makeText(RegisterActivity.this, "User Created", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                    intent.putExtra("email", email);
+                    intent.putExtra("password", password);
+                    startActivity(intent);
+                    Log.d("Firebase", "Returning to LoginActivity()");
                 }
 
             }

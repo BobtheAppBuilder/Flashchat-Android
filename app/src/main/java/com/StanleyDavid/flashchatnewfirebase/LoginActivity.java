@@ -2,7 +2,11 @@ package com.StanleyDavid.flashchatnewfirebase;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PersistableBundle;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -10,9 +14,17 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -35,6 +47,14 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView = (EditText) findViewById(R.id.login_password);
         mRegisterUser = (Button) findViewById(R.id.login_register_button);
         mLoginUser = (Button) findViewById(R.id.login_sign_in_button);
+
+        if(getIntent() != null) {
+            String mRegisteredEmail = getIntent().getStringExtra("email");
+            String mRegisteredPassword = getIntent().getStringExtra("password");
+
+            mEmailView.setText(mRegisteredEmail);
+            mPasswordView.setText(mRegisteredPassword);
+        }
 
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -82,16 +102,64 @@ public class LoginActivity extends AppCompatActivity {
 
     // TODO: Complete the attemptLogin() method
     private void attemptLogin() {
+        String email = mEmailView.getText().toString();
+        final String password = mPasswordView.getText().toString();
 
-
-        // TODO: Use FirebaseAuth to sign in with email & password
-
-
+        if (!isEmailValid(email)){
+           mEmailView.requestFocus();
+           mEmailView.setError("Please enter a valid email address");
+        } else if("".equals(password)){
+            mPasswordView.requestFocus();
+            mPasswordView.setError("Please enter your password");
+        }
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (task.isSuccessful()) {
+                    Toast.makeText(LoginActivity.this, "Signing in...", Toast.LENGTH_SHORT).show();
+                    Log.d("Firebase", "attemptLogin() Successful!");
+                    FirebaseUser user = mAuth.getCurrentUser();
+                    Intent intent = new Intent(LoginActivity.this, MainChatActivity.class);
+                    finish();
+                    startActivity(intent);
+                } else{
+                    try {
+                        Toast.makeText(LoginActivity.this, "Sign-in Failed", Toast.LENGTH_SHORT).show();
+                        Log.d("Firebase", "attemptLogin() Failed!");
+                        showErrorDialog("There was a problem signing in!");
+                        Log.d("Firebase", task.getException() + ": " + task.getException().getMessage());
+                        throw task.getException();
+                    } catch (FirebaseAuthInvalidUserException e) {
+                        mEmailView.setError(getString(R.string.error_user_not_found));
+                        mEmailView.requestFocus();
+                    } catch (FirebaseAuthInvalidCredentialsException e) {
+                        mPasswordView.setError(getString(R.string.error_incorrect_password));
+                        mPasswordView.requestFocus();
+                    } catch (Exception e) {
+                        Log.d("Firebase", e.getClass().getName() + ": " + e.getMessage());
+                        finish();
+                    }
+                }
+                }
+            });
+    }
+    // TODO: Show error on screen with an alert dialog
+    protected void showErrorDialog(String message){
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Oops")
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
 
     }
-
-    // TODO: Show error on screen with an alert dialog
-
-
+    private boolean isEmailValid(String email) {
+        // You can add more checking logic here.
+        if (!"".equals(email)) {
+            if (email.matches("[a-zA-Z0-9]*@.*\\.com")) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

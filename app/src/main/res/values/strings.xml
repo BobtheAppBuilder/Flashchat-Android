@@ -13,6 +13,8 @@
     <string name="error_invalid_email">This email address is invalid</string>
     <string name="error_invalid_password">Password too short or does not match</string>
     <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_user_not_found">No user account was found with the given email</string>
+    <string name="error_user_disabled">This user account has been disabled</string>
     <string name="error_field_required">This field is required</string>
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
