@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,22 +43,24 @@ public class ChatListAdapter extends BaseAdapter {
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+            return;
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
+            mDataSnapshotList.remove(dataSnapshot);
+            notifyDataSetChanged();
 
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
+            return;
         }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
-
+            Log.d("Firebase", databaseError.getClass().getName() + ": " + databaseError.getMessage());
         }
     };
 
@@ -88,7 +91,7 @@ public class ChatListAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        DataSnapshot snapshot = mDataSnapshotList.get(position);
+        return 0;
     }
 
     @Override
